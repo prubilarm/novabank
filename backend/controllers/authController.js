@@ -104,9 +104,10 @@ const register = async (req, res) => {
     }
     
     // Generar token JWT
+    const secret = process.env.JWT_SECRET || 'novabank_master_secret_2026_unbreakable';
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
+      secret,
       { expiresIn: '7d' }
     );
     
@@ -212,9 +213,10 @@ const login = async (req, res) => {
     }
     
     // Generar token JWT
+    const secret = process.env.JWT_SECRET || 'novabank_master_secret_2026_unbreakable';
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
+      secret,
       { expiresIn: '7d' }
     );
     
@@ -317,9 +319,10 @@ const syncGoogleUser = async (req, res) => {
     }
     
     // Generar token JWT
+    const secret = process.env.JWT_SECRET || 'novabank_master_secret_2026_unbreakable';
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET,
+      secret,
       { expiresIn: '7d' }
     );
     

@@ -43,8 +43,10 @@ export const AuthProvider = ({ children }) => {
       navigate('/dashboard');
       return { success: true };
     } catch (error) {
-      const message = error.response?.data?.error || 'Error al iniciar sesión';
-      toast.error(message);
+      console.error('Error de login:', error);
+      const message = error.response?.data?.error || error.message || 'Error al iniciar sesión';
+      // Aseguramos que message sea un string para evitar el error #31 de React
+      toast.error(typeof message === 'string' ? message : 'Fallo en la autenticación');
       return { success: false, error: message };
     }
   };
