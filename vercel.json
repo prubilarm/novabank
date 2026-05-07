@@ -32,23 +32,23 @@
     },
     {
       "source": "/static/(.*)",
-      "destination": "/static/$1"
+      "destination": "/frontend/static/$1"
     },
     {
       "source": "/favicon.ico",
-      "destination": "/favicon.ico"
+      "destination": "/frontend/favicon.ico"
     },
     {
       "source": "/manifest.json",
-      "destination": "/manifest.json"
+      "destination": "/frontend/manifest.json"
     },
     {
       "source": "/logo192.png",
-      "destination": "/logo192.png"
+      "destination": "/frontend/logo192.png"
     },
     {
       "source": "/((?!api|auth|admin|health|static|favicon.ico|manifest.json|logo192.png).*)",
-      "destination": "/index.html"
+      "destination": "/frontend/index.html"
     }
   ]
 }
