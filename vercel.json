@@ -31,8 +31,24 @@
       "destination": "api/index.js"
     },
     {
-      "source": "/(.*)",
-      "destination": "frontend/index.html"
+      "source": "/static/(.*)",
+      "destination": "/static/$1"
+    },
+    {
+      "source": "/favicon.ico",
+      "destination": "/favicon.ico"
+    },
+    {
+      "source": "/manifest.json",
+      "destination": "/manifest.json"
+    },
+    {
+      "source": "/logo192.png",
+      "destination": "/logo192.png"
+    },
+    {
+      "source": "/((?!api|auth|admin|health|static|favicon.ico|manifest.json|logo192.png).*)",
+      "destination": "/index.html"
     }
   ]
 }
