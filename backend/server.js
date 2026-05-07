@@ -1,37 +1,42 @@
+// Punto de entrada principal del backend
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
-const swaggerSpecs = require('./config/swagger');
-const errorHandler = require('./middlewares/errorHandler');
-require('dotenv').config();
-
-// Rutas
+const specs = require('./config/swagger');
 const authRoutes = require('./routes/authRoutes');
 const apiRoutes = require('./routes/apiRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middlewares
+// Middlewares globales
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
   credentials: true
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Documentación Swagger
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpecs));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
-// Uso de Rutas
-app.use('/api/auth', authRoutes);
+// Ruta de salud
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Rutas de la API
+app.use('/auth', authRoutes);
 app.use('/api', apiRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/admin', adminRoutes);
 
-// Manejo de errores global (Debe ir después de las rutas)
+// Manejador de errores global (siempre al final)
 app.use(errorHandler);
 
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`🚀 NovaBank Enterprise Server corriendo en http://localhost:${PORT}`);
-  console.log(`📄 API Docs: http://localhost:${PORT}/api-docs`);
+  console.log(`🏦 NovaBank Backend corriendo en puerto ${PORT}`);
+  console.log(`📚 Documentación API: http://localhost:${PORT}/api-docs`);
 });

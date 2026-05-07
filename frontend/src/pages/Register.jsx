@@ -13,7 +13,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/auth/register', formData);
+      await axios.post('/auth/register', formData);
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
