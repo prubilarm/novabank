@@ -6,10 +6,10 @@ const express = require('express'); // El motor que maneja nuestras rutas
 const cors = require('cors'); // Permite que nuestra web se hable con nuestro servidor
 const swaggerUi = require('swagger-ui-express'); // Para ver nuestra documentación interactiva
 // const specs = require('./config/swagger'); // La configuración de nuestra documentación
-const authRoutes = require('./routes/authRoutes'); // Rutas para entrar y registrarse
-const apiRoutes = require('./routes/apiRoutes'); // Rutas para dinero y perfil
-const adminRoutes = require('./routes/adminRoutes'); // Rutas solo para el jefe (admin)
-const errorHandler = require('./middlewares/errorHandler'); // El que atrapa errores si algo falla
+const authRoutes = require('../api_core/routes/authRoutes'); // Rutas para entrar y registrarse
+const apiRoutes = require('../api_core/routes/apiRoutes'); // Rutas para dinero y perfil
+const adminRoutes = require('../api_core/routes/adminRoutes'); // Rutas solo para el jefe (admin)
+const errorHandler = require('../api_core/middlewares/errorHandler'); // El que atrapa errores si algo falla
 
 const app = express();
 
