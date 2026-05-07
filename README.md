@@ -85,5 +85,30 @@ El sistema requiere las siguientes variables para funcionar correctamente:
 Una vez que el backend esté en ejecución, puedes acceder a la documentación interactiva en:
 `http://localhost:3001/api-docs`
 
+## 🛡️ Seguridad
+
+- ✅ **JWT**: Autenticación con expiración de 7 días para un equilibrio entre UX y seguridad.
+- ✅ **Bcrypt**: Hashing de contraseñas de alta seguridad.
+- ✅ **CORS**: Configurado para permitir solo orígenes de confianza.
+- ✅ **Validación**: Uso de `express-validator` en todos los endpoints sensibles.
+- ✅ **Storage**: Tokens almacenados en `localStorage` (Web) y `AsyncStorage` (Móvil).
+- ✅ **Privilegios**: Uso de `Service Role` en backend para bypass de RLS controlado.
+
+## 🤝 Contribución
+
+1. Haz un Fork del proyecto
+2. Crea tu rama feature (`git checkout -b feature/AmazingFeature`)
+3. Haz commit de tus cambios (`git commit -m 'Add AmazingFeature'`)
+4. Haz push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto está bajo la licencia **MIT**.
+
+## 📞 Contacto
+
+Soporte: [soporte@novabank.com](mailto:soporte@novabank.com)
+
 ---
 © 2024 NovaBank. Desarrollado con ❤️ para el futuro de las finanzas.
