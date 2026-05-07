@@ -12,8 +12,13 @@ function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    await login(email, password);
+    const result = await login(email, password);
     setIsLoading(false);
+    
+    // Si el login fue exitoso, forzamos el salto al dashboard
+    if (result && result.success) {
+      window.location.href = '/dashboard';
+    }
   };
 
   return (

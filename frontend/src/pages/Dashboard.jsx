@@ -20,16 +20,27 @@ function Dashboard() {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const [balanceRes, transactionsRes] = await Promise.all([
-        api.get('/api/balance'),
-        api.get('/api/history?limit=5')
-      ]);
       
-      setBalance(balanceRes.data.balance);
-      setTransactions(transactionsRes.data.transactions);
+      // Cargamos el saldo por separado para que sea más robusto
+      try {
+        const balanceRes = await api.get('/api/balance');
+        setBalance(balanceRes.data.balance || 0);
+      } catch (err) {
+        console.error('Error balance:', err);
+        setBalance(0);
+      }
+
+      // Cargamos el historial por separado
+      try {
+        const transactionsRes = await api.get('/api/history?limit=5');
+        setTransactions(transactionsRes.data.transactions || []);
+      } catch (err) {
+        console.error('Error history:', err);
+        setTransactions([]);
+      }
+      
     } catch (error) {
-      console.error('Error loading dashboard:', error);
-      toast.error('Error al cargar el dashboard');
+      console.error('Error general dashboard:', error);
     } finally {
       setLoading(false);
     }
