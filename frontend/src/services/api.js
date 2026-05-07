@@ -1,7 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3001',
+  // Detecta automáticamente si estamos en Vercel o Local
+  baseURL: window.location.origin,
   headers: {
     'Content-Type': 'application/json',
   },
