@@ -2,10 +2,20 @@ const supabase = require('../config/supabase');
 
 exports.getTransactions = async (req, res) => {
   try {
+    // Primero obtenemos el ID de la cuenta del usuario
+    const { data: account } = await supabase
+      .from('accounts')
+      .select('id')
+      .eq('user_id', req.user.id)
+      .single();
+
+    if (!account) return res.status(404).json({ message: 'Cuenta no encontrada' });
+
+    // Buscamos transacciones vinculadas a ese account_id
     const { data, error } = await supabase
       .from('transactions')
       .select('*')
-      .or(`sender_id.eq.${req.user.id},receiver_id.eq.${req.user.id}`)
+      .or(`sender_account_id.eq.${account.id},receiver_account_id.eq.${account.id}`)
       .order('created_at', { ascending: false });
 
     if (error) throw error;
@@ -16,48 +26,51 @@ exports.getTransactions = async (req, res) => {
 };
 
 exports.transfer = async (req, res) => {
-  const { targetAccountNumber, amount, description } = req.body;
-  const senderId = req.user.id;
+  const { targetEmail, amount, description } = req.body;
+  const senderUserId = req.user.id;
 
   try {
-    // 1. Obtener saldo emisor
-    const { data: sender, error: sError } = await supabase
-      .from('profiles')
-      .select('balance')
-      .eq('id', senderId)
+    // 1. Obtener cuenta emisor
+    const { data: senderAccount } = await supabase
+      .from('accounts')
+      .select('id, balance')
+      .eq('user_id', senderUserId)
       .single();
 
-    if (sender.balance < amount) return res.status(400).json({ message: 'Saldo insuficiente' });
+    if (senderAccount.balance < amount) return res.status(400).json({ message: 'Saldo insuficiente' });
 
-    // 2. Buscar receptor
-    const { data: receiver, error: rError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('account_number', targetAccountNumber)
+    // 2. Buscar cuenta receptor por Email (vía tabla users)
+    const { data: receiverUser } = await supabase
+      .from('users')
+      .select('id, accounts(id)')
+      .eq('email', targetEmail)
       .single();
 
-    if (!receiver) return res.status(404).json({ message: 'Cuenta no encontrada' });
+    if (!receiverUser || !receiverUser.accounts[0]) {
+      return res.status(404).json({ message: 'Usuario de destino no encontrado' });
+    }
 
-    // 3. Transacción (RPC en Supabase o serie de updates)
-    // Para simplificar usaremos updates en serie
-    await supabase.from('profiles').update({ balance: sender.balance - amount }).eq('id', senderId);
+    const receiverAccountId = receiverUser.accounts[0].id;
+
+    // 3. Ejecutar transferencias (Actualizar balances)
+    await supabase.from('accounts').update({ balance: parseFloat(senderAccount.balance) - parseFloat(amount) }).eq('id', senderAccount.id);
     
-    const { data: recvProfile } = await supabase.from('profiles').select('balance').eq('id', receiver.id).single();
-    await supabase.from('profiles').update({ balance: recvProfile.balance + amount }).eq('id', receiver.id);
+    const { data: recvAcc } = await supabase.from('accounts').select('balance').eq('id', receiverAccountId).single();
+    await supabase.from('accounts').update({ balance: parseFloat(recvAcc.balance) + parseFloat(amount) }).eq('id', receiverAccountId);
 
-    // 4. Registrar transacción
+    // 4. Registrar transacción en la tabla obligatoria
     await supabase.from('transactions').insert([
       { 
-        sender_id: senderId, 
-        receiver_id: receiver.id, 
+        sender_account_id: senderAccount.id, 
+        receiver_account_id: receiverAccountId, 
         amount: amount, 
         description: description,
-        type: 'TRANSFER'
+        transaction_type: 'transfer'
       }
     ]);
 
     res.json({ message: 'Transferencia completada con éxito' });
   } catch (err) {
-    res.status(500).json({ message: 'Error en la operación' });
+    res.status(500).json({ message: 'Error en la operación de transferencia' });
   }
 };
