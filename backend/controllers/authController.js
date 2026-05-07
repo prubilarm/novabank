@@ -1,10 +1,13 @@
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const supabase = require('../services/supabaseClient');
-const { sendWelcomeEmail } = require('../services/emailService');
+// --- Controlador de Autenticación de NovaBank ---
+// Aquí manejamos quién puede entrar al banco y cómo se registran los nuevos clientes
+const bcrypt = require('bcrypt'); // Herramienta para "encriptar" contraseñas (hacerlas secretas)
+const jwt = require('jsonwebtoken'); // Herramienta para dar una "llave digital" (token) al usuario
+const supabase = require('../services/supabaseClient'); // Nuestra conexión a la base de datos
+const { sendWelcomeEmail } = require('../services/emailService'); // Servicio para mandar correos de bienvenida
 
 /**
- * Registro de nuevo usuario con email/contraseña
+ * --- Registro de Nuevo Usuario ---
+ * Este código se activa cuando alguien quiere abrir una cuenta en el banco
  */
 const register = async (req, res) => {
   try {

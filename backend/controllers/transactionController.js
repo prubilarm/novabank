@@ -1,4 +1,6 @@
-const supabase = require('../services/supabaseClient');
+// --- Controlador de Movimientos de NovaBank ---
+// Aquí es donde sucede el movimiento de dinero: depósitos y transferencias
+const supabase = require('../services/supabaseClient'); // Conexión a nuestra base de datos
 
 /**
  * Obtener saldo actual del usuario

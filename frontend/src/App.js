@@ -1,17 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './contexts/AuthContext';
-import { useAuth } from './hooks/useAuth';
+import { Toaster } from 'react-hot-toast'; // Para mostrar mensajes bonitos arriba
+import { AuthProvider } from './contexts/AuthContext'; // El "guardián" de la sesión
+import { useAuth } from './hooks/useAuth'; // Para preguntar si hay un usuario logueado
 
-// Pages
-import LandingPage from './pages/LandingPage';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
-import Dashboard from './pages/Dashboard';
-import TransactionsPage from './pages/TransactionsPage';
-import TransferPage from './pages/TransferPage';
-import AdminPanel from './pages/AdminPanel';
+// --- Importamos nuestras Páginas ---
+import LandingPage from './pages/LandingPage'; // La portada del banco
+import LoginPage from './pages/LoginPage'; // Página para entrar
+import RegisterPage from './pages/RegisterPage'; // Página para registrarse
+import Dashboard from './pages/Dashboard'; // El panel principal del cliente
+import TransactionsPage from './pages/TransactionsPage'; // Lista de movimientos
+import TransferPage from './pages/TransferPage'; // Para mandar dinero
+import AdminPanel from './pages/AdminPanel'; // El panel de control del banco (solo admin)
 
 // Components
 import Navbar from './components/Navbar';

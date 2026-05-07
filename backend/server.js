@@ -1,42 +1,47 @@
-// Punto de entrada principal del backend
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const swaggerUi = require('swagger-ui-express');
-const specs = require('./config/swagger');
-const authRoutes = require('./routes/authRoutes');
-const apiRoutes = require('./routes/apiRoutes');
-const adminRoutes = require('./routes/adminRoutes');
-const errorHandler = require('./middlewares/errorHandler');
+// Punto de entrada principal del servidor NovaBank
+// Aquí es donde nace toda la magia de nuestro banco digital
+require('dotenv').config(); // Cargamos nuestras llaves secretas desde el archivo .env
+const express = require('express'); // El motor que maneja nuestras rutas
+const cors = require('cors'); // Permite que nuestra web se hable con nuestro servidor
+const swaggerUi = require('swagger-ui-express'); // Para ver nuestra documentación interactiva
+const specs = require('./config/swagger'); // La configuración de nuestra documentación
+const authRoutes = require('./routes/authRoutes'); // Rutas para entrar y registrarse
+const apiRoutes = require('./routes/apiRoutes'); // Rutas para dinero y perfil
+const adminRoutes = require('./routes/adminRoutes'); // Rutas solo para el jefe (admin)
+const errorHandler = require('./middlewares/errorHandler'); // El que atrapa errores si algo falla
 
 const app = express();
 
-// Middlewares globales
+// --- Configuraciones de Seguridad ---
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Solo permitimos nuestra web oficial
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json()); // Permite que el servidor entienda datos en formato JSON
 app.use(express.urlencoded({ extended: true }));
 
-// Documentación Swagger
+// --- Documentación Interactiva ---
+// Puedes verla entrando a: http://localhost:3001/api-docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
-// Ruta de salud
+// --- Ruta de Salud ---
+// Solo para saber si el corazón del banco sigue latiendo
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Rutas de la API
-app.use('/auth', authRoutes);
-app.use('/api', apiRoutes);
-app.use('/admin', adminRoutes);
+// --- Conexión de Rutas ---
+app.use('/auth', authRoutes); // Todo lo relacionado con usuarios
+app.use('/api', apiRoutes); // Todo lo relacionado con dinero y transacciones
+app.use('/admin', adminRoutes); // Todo lo relacionado con el control administrativo
 
-// Manejador de errores global (siempre al final)
+// --- Manejo de Errores ---
+// Si hay un error, este código se encarga de que la app no se rompa y avise al usuario
 app.use(errorHandler);
 
+// --- Encendido del Servidor ---
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
-  console.log(`🏦 NovaBank Backend corriendo en puerto ${PORT}`);
-  console.log(`📚 Documentación API: http://localhost:${PORT}/api-docs`);
+  console.log(`🚀 Banco NovaBank encendido en el puerto ${PORT}`);
+  console.log(`📚 Documentación lista en http://localhost:${PORT}/api-docs`);
 });
