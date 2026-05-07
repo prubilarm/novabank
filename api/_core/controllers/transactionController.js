@@ -14,6 +14,15 @@ const getBalance = async (req, res) => {
       .single();
     
     if (error) {
+      // Si la DB no está configurada, devolvemos un saldo de simulación para que la web no se rompa
+      if (error === 'DB no configurada' || (error.message && error.message.includes('DB no configurada'))) {
+        return res.json({
+          success: true,
+          balance: 10000.00,
+          currency: 'USD',
+          simulated: true
+        });
+      }
       return res.status(500).json({ 
         success: false, 
         error: 'Error al obtener saldo' 
@@ -277,6 +286,18 @@ const getHistory = async (req, res) => {
       .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
     
     if (txError) {
+      if (txError === 'DB no configurada' || (txError.message && txError.message.includes('DB no configurada'))) {
+        return res.json({
+          success: true,
+          transactions: [
+            { id: 'sim-1', amount: 2500.00, direction: 'incoming', transaction_type: 'deposit', description: 'Nómina Mensual', created_at: new Date().toISOString(), counterparty: { full_name: 'Empresa Global S.A.' } },
+            { id: 'sim-2', amount: 45.50, direction: 'outgoing', transaction_type: 'transfer', description: 'Pago Amazon Store', created_at: new Date(Date.now() - 86400000).toISOString(), counterparty: { full_name: 'Amazon' } },
+            { id: 'sim-3', amount: 120.00, direction: 'outgoing', transaction_type: 'transfer', description: 'Cena Restaurante', created_at: new Date(Date.now() - 172800000).toISOString(), counterparty: { full_name: 'Restaurante Gourmet' } }
+          ],
+          count: 3,
+          simulated: true
+        });
+      }
       return res.status(500).json({ 
         success: false, 
         error: 'Error al obtener historial' 
