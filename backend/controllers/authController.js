@@ -50,7 +50,7 @@ exports.login = async (req, res) => {
     if (error) return res.status(401).json({ message: 'Credenciales inválidas' });
 
     const userProfile = await User.findById(data.user.id);
-    const token = jwt.sign({ id: data.user.id, email: data.user.email }, JWT_SECRET, { expiresIn: '1h' });
+    const token = jwt.sign({ userId: data.user.id, email: data.user.email }, JWT_SECRET, { expiresIn: '1h' });
 
     res.json({
       token,

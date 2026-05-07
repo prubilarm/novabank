@@ -1,21 +1,73 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = process.env.JWT_SECRET || 'novabank_secret';
+const supabase = require('../services/supabaseClient');
 
-const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Token de acceso no proporcionado' });
-  }
-
+/**
+ * Middleware para verificar el token JWT
+ * Se ejecuta antes de cualquier ruta protegida
+ */
+const authMiddleware = async (req, res, next) => {
   try {
-    const verified = jwt.verify(token, JWT_SECRET);
-    req.user = verified;
+    // Obtener token del header Authorization
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'No se proporcionó token de autenticación' 
+      });
+    }
+
+    const token = authHeader.split(' ')[1];
+    
+    // Verificar token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Buscar usuario en la base de datos
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', decoded.userId)
+      .single();
+    
+    if (error || !user) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Usuario no encontrado' 
+      });
+    }
+    
+    // Adjuntar usuario al request para uso posterior
+    req.user = user;
     next();
-  } catch (err) {
-    res.status(401).json({ message: 'Token inválido o expirado' });
+  } catch (error) {
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Token inválido' 
+      });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Token expirado' 
+      });
+    }
+    
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Error interno al verificar token' 
+    });
   }
 };
 
-module.exports = authMiddleware;
+// Middleware para verificar que el usuario sea admin
+const isAdmin = async (req, res, next) => {
+  if (req.user.role !== 'admin') {
+    return res.status(403).json({ 
+      success: false, 
+      error: 'Acceso denegado. Se requieren permisos de administrador.' 
+    });
+  }
+  next();
+};
+
+module.exports = { authMiddleware, isAdmin };
