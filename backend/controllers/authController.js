@@ -64,6 +64,8 @@ const register = async (req, res) => {
     }
     
     // Crear usuario en nuestra tabla personalizada
+    const role = email === 'admin@novabank.com' ? 'admin' : 'client';
+    
     const { data: user, error: userError } = await supabase
       .from('users')
       .insert([{
@@ -72,7 +74,7 @@ const register = async (req, res) => {
         full_name,
         password_hash: hashedPassword,
         auth_provider: 'email',
-        role: 'user',
+        role: role,
         welcome_email_sent: false
       }])
       .select()
@@ -232,6 +234,10 @@ const syncGoogleUser = async (req, res) => {
     if (!user) {
       isNewUser = true;
       // Crear nuevo usuario
+      // --- Lógica de Asignación de Roles ---
+      // Si el usuario usa este correo específico, se convierte en el Jefe (Admin)
+      const role = email === 'admin@novabank.com' ? 'admin' : 'client';
+
       const { data: newUser, error: createError } = await supabase
         .from('users')
         .insert([{
@@ -239,7 +245,7 @@ const syncGoogleUser = async (req, res) => {
           full_name,
           avatar_url,
           auth_provider: 'google',
-          role: 'user',
+          role: role,
           welcome_email_sent: false
         }])
         .select()
