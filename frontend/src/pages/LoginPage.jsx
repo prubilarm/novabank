@@ -1,133 +1,196 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Mail, Lock, LogIn, Shield } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 function LoginPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    await login(email, password);
-    setIsLoading(false);
+    setError('');
+    
+    if (!email || !password) {
+      setError('Por favor ingresa tu email y contraseña');
+      return;
+    }
+    
+    setLoading(true);
+    const result = await login(email, password);
+    setLoading(false);
+    
+    if (result.success) {
+      toast.success('¡Bienvenido a NovaBank!');
+      navigate('/dashboard');
+    } else {
+      setError(result.error || 'Credenciales inválidas. Por favor intenta de nuevo.');
+      toast.error(result.error || 'Error al iniciar sesión');
+    }
+  };
+
+  // Credenciales de prueba pre-cargadas (solo para facilitar pruebas)
+  const fillAdminCredentials = () => {
+    setEmail('admin@novabank.com');
+    setPassword('Admin123!');
+    setError('');
+  };
+
+  const fillTestCredentials = () => {
+    setEmail('usuario@test.com');
+    setPassword('Test123!');
+    setError('');
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full">
-        {/* Logo */}
+        {/* Logo y título */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl shadow-lg mb-4">
-            <Shield className="text-white w-8 h-8" />
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <span className="text-white text-2xl font-bold">NB</span>
           </div>
-          <h2 className="text-3xl font-extrabold text-gray-900">Bienvenido a NovaBank</h2>
-          <p className="mt-2 text-gray-600">Accede a tu banca digital segura</p>
+          <h1 className="text-3xl font-bold text-gray-800">NovaBank</h1>
+          <p className="text-gray-500 mt-2">Tu banca digital segura</p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-3xl shadow-xl p-8 border border-white/50">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Tarjeta de login */}
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">Iniciar Sesión</h2>
+          
+          {/* Mensaje de error */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-red-500" />
+              <p className="text-red-600 text-sm">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Campo email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="email"
-                  required
-                  className="input-field pl-10"
-                  placeholder="usuario@ejemplo.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  placeholder="tu@email.com"
+                  required
                 />
               </div>
             </div>
 
+            {/* Campo contraseña */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contraseña
+              </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
-                  type="password"
-                  required
-                  className="input-field pl-10"
-                  placeholder="••••••••"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  placeholder="••••••••"
+                  required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5 text-gray-400" />
+                  ) : (
+                    <Eye className="w-5 h-5 text-gray-400" />
+                  )}
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
-                  Recordarme
-                </label>
-              </div>
-
-              <div className="text-sm">
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
-                  ¿Olvidaste tu contraseña?
-                </a>
-              </div>
-            </div>
-
+            {/* Botón login */}
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-50"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed mt-6"
             >
-              {isLoading ? (
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Iniciando sesión...
+                </span>
               ) : (
-                <>
-                  <LogIn className="w-5 h-5 mr-2" /> Iniciar Sesión
-                </>
+                'Iniciar Sesión'
               )}
             </button>
           </form>
 
-          <div className="mt-8">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">O continúa con</span>
-              </div>
+          {/* Separador */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
             </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">O continúa con</span>
+            </div>
+          </div>
 
-            <div className="mt-6">
+          {/* Botón Google */}
+          <button
+            className="w-full border border-gray-300 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-50 transition flex items-center justify-center gap-3"
+            onClick={() => toast.info('Configura Google OAuth en Supabase para usar esta opción')}
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            </svg>
+            Google
+          </button>
+
+          {/* Link de registro */}
+          <p className="text-center text-gray-600 mt-6">
+            ¿No tienes cuenta?{' '}
+            <Link to="/register" className="text-blue-600 font-semibold hover:underline">
+              Regístrate gratis
+            </Link>
+          </p>
+
+          {/* Botones de prueba (SOLO PARA DESARROLLO - Remover en producción) */}
+          <div className="mt-6 pt-4 border-t border-gray-200">
+            <p className="text-xs text-gray-400 text-center mb-3">🔧 Credenciales de prueba (solo desarrollo)</p>
+            <div className="flex gap-2">
               <button
-                type="button"
-                className="w-full flex items-center justify-center px-4 py-3 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
+                onClick={fillAdminCredentials}
+                className="flex-1 text-xs bg-gray-100 text-gray-600 py-2 rounded-lg hover:bg-gray-200 transition"
               >
-                <img className="h-5 w-5 mr-2" src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" />
-                Google
+                Admin
+              </button>
+              <button
+                onClick={fillTestCredentials}
+                className="flex-1 text-xs bg-gray-100 text-gray-600 py-2 rounded-lg hover:bg-gray-200 transition"
+              >
+                Usuario Test
               </button>
             </div>
           </div>
         </div>
-
-        <p className="mt-8 text-center text-sm text-gray-600">
-          ¿No tienes una cuenta?{' '}
-          <Link to="/register" className="font-bold text-blue-600 hover:text-blue-500 transition-colors">
-            Regístrate ahora gratis
-          </Link>
-        </p>
       </div>
     </div>
   );
