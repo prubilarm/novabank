@@ -4,7 +4,7 @@ require('dotenv').config(); // Cargamos nuestras llaves secretas desde el archiv
 const express = require('express'); // El motor que maneja nuestras rutas
 const cors = require('cors'); // Permite que nuestra web se hable con nuestro servidor
 const swaggerUi = require('swagger-ui-express'); // Para ver nuestra documentación interactiva
-const specs = require('./config/swagger'); // La configuración de nuestra documentación
+// const specs = require('./config/swagger'); // La configuración de nuestra documentación
 const authRoutes = require('./routes/authRoutes'); // Rutas para entrar y registrarse
 const apiRoutes = require('./routes/apiRoutes'); // Rutas para dinero y perfil
 const adminRoutes = require('./routes/adminRoutes'); // Rutas solo para el jefe (admin)
@@ -18,9 +18,8 @@ app.use(cors());
 app.use(express.json()); // Permite que el servidor entienda datos en formato JSON
 app.use(express.urlencoded({ extended: true }));
 
-// --- Documentación Interactiva ---
-// Puedes verla entrando a: http://localhost:3001/api-docs
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+// --- Documentación Interactiva (Desactivada en Prod para estabilidad) ---
+// app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // --- Ruta de Salud ---
 // Solo para saber si el corazón del banco sigue latiendo
