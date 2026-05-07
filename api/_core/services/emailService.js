@@ -1,7 +1,11 @@
 const { Resend } = require('resend');
 
-// Inicializar Resend con la API key
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Inicializar Resend con la API key (Blindado para evitar crash en producción)
+const resendKey = process.env.RESEND_API_KEY;
+if (!resendKey) {
+  console.warn('⚠️ AVISO: RESEND_API_KEY no configurada. Los correos no se enviarán.');
+}
+const resend = resendKey ? new Resend(resendKey) : { emails: { send: () => Promise.resolve({ data: null, error: 'Resend no configurado' }) } };
 
 /**
  * Enviar email de bienvenida a nuevos usuarios
