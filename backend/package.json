@@ -2,10 +2,10 @@
   "name": "novabank-backend",
   "version": "1.0.0",
   "description": "API para el sistema bancario NovaBank",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.105.3",
