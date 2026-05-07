@@ -1,68 +1,353 @@
-const User = require('../models/User');
-const Account = require('../models/Account');
-const supabase = require('../services/supabaseClient');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { validationResult } = require('express-validator');
+const supabase = require('../services/supabaseClient');
+const { sendWelcomeEmail } = require('../services/emailService');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'novabank_secret';
-
-exports.register = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { fullName, email, password } = req.body;
-
+/**
+ * Registro de nuevo usuario con email/contraseña
+ */
+const register = async (req, res) => {
   try {
-    // 1. Registro en Supabase Auth
+    const { email, full_name, password } = req.body;
+    
+    // Validaciones básicas
+    if (!email || !full_name || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Todos los campos son requeridos' 
+      });
+    }
+    
+    if (password.length < 6) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'La contraseña debe tener al menos 6 caracteres' 
+      });
+    }
+    
+    // Verificar si el email ya existe
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('email')
+      .eq('email', email)
+      .single();
+    
+    if (existingUser) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'El email ya está registrado' 
+      });
+    }
+    
+    // Hashear contraseña
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Crear usuario en Supabase Auth (para autenticación)
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: full_name
+        }
+      }
     });
-
-    if (authError) return res.status(400).json({ message: authError.message });
-
-    // 2. Crear registro en tabla users usando el Modelo
-    const userData = await User.create({
-      id: authData.user.id,
-      full_name: fullName,
-      email: email,
+    
+    if (authError) {
+      return res.status(400).json({ 
+        success: false, 
+        error: authError.message 
+      });
+    }
+    
+    // Crear usuario en nuestra tabla personalizada
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .insert([{
+        id: authData.user.id,
+        email,
+        full_name,
+        password_hash: hashedPassword,
+        auth_provider: 'email',
+        role: 'user',
+        welcome_email_sent: false
+      }])
+      .select()
+      .single();
+    
+    if (userError) {
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Error al crear el usuario en la base de datos' 
+      });
+    }
+    
+    // Crear cuenta bancaria asociada con saldo inicial de $100
+    const { data: account, error: accountError } = await supabase
+      .from('accounts')
+      .insert([{
+        user_id: user.id,
+        balance: 100.00,
+        currency: 'USD'
+      }])
+      .select()
+      .single();
+    
+    if (accountError) {
+      console.error('Error al crear cuenta bancaria:', accountError);
+      // No fallamos el registro, pero registramos el error
+    }
+    
+    // Generar token JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    // Enviar email de bienvenida
+    try {
+      await sendWelcomeEmail(email, full_name);
+      // Marcar como enviado
+      await supabase
+        .from('users')
+        .update({ welcome_email_sent: true })
+        .eq('id', user.id);
+    } catch (emailError) {
+      console.error('Error al enviar email de bienvenida:', emailError);
+      // No fallamos el registro si el email falla
+    }
+    
+    res.status(201).json({
+      success: true,
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role
+      }
     });
-
-    // 3. Crear cuenta bancaria inicial
-    await Account.create({
-      user_id: userData.id,
-      balance: 100.00
+    
+  } catch (error) {
+    console.error('Error en register:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error interno del servidor' 
     });
-
-    res.status(201).json({ message: 'Usuario registrado exitosamente' });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
   }
 };
 
-exports.login = async (req, res) => {
-  const { email, password } = req.body;
-
+/**
+ * Login de usuario con email/contraseña
+ */
+const login = async (req, res) => {
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return res.status(401).json({ message: 'Credenciales inválidas' });
-
-    const userProfile = await User.findById(data.user.id);
-    const token = jwt.sign({ userId: data.user.id, email: data.user.email }, JWT_SECRET, { expiresIn: '1h' });
-
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Email y contraseña son requeridos' 
+      });
+    }
+    
+    // Buscar usuario por email
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+    
+    if (userError || !user) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Credenciales inválidas' 
+      });
+    }
+    
+    // Verificar contraseña
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    if (!isValidPassword) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Credenciales inválidas' 
+      });
+    }
+    
+    // Generar token JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
     res.json({
+      success: true,
       token,
       user: {
-        id: userProfile.id,
-        fullName: userProfile.full_name,
-        email: userProfile.email,
-        accountId: userProfile.accounts[0]?.id,
-        balance: userProfile.accounts[0]?.balance
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        avatar_url: user.avatar_url
       }
     });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+    
+  } catch (error) {
+    console.error('Error en login:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error interno del servidor' 
+    });
   }
+};
+
+/**
+ * Sincronizar usuario de Google OAuth
+ */
+const syncGoogleUser = async (req, res) => {
+  try {
+    const { email, full_name, avatar_url, google_id } = req.body;
+    
+    if (!email || !full_name) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Email y nombre son requeridos' 
+      });
+    }
+    
+    // Buscar si el usuario ya existe
+    let { data: user } = await supabase
+      .from('users')
+      .select('*')
+      .eq('email', email)
+      .single();
+    
+    let isNewUser = false;
+    
+    if (!user) {
+      isNewUser = true;
+      // Crear nuevo usuario
+      const { data: newUser, error: createError } = await supabase
+        .from('users')
+        .insert([{
+          email,
+          full_name,
+          avatar_url,
+          auth_provider: 'google',
+          role: 'user',
+          welcome_email_sent: false
+        }])
+        .select()
+        .single();
+      
+      if (createError) {
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Error al crear usuario' 
+        });
+      }
+      
+      user = newUser;
+      
+      // Crear cuenta bancaria para nuevo usuario
+      const { error: accountError } = await supabase
+        .from('accounts')
+        .insert([{
+          user_id: user.id,
+          balance: 100.00,
+          currency: 'USD'
+        }]);
+      
+      if (accountError) {
+        console.error('Error al crear cuenta bancaria:', accountError);
+      }
+      
+      // Enviar email de bienvenida SOLO a usuarios nuevos
+      try {
+        await sendWelcomeEmail(email, full_name);
+        await supabase
+          .from('users')
+          .update({ welcome_email_sent: true })
+          .eq('id', user.id);
+      } catch (emailError) {
+        console.error('Error al enviar email de bienvenida:', emailError);
+      }
+    }
+    
+    // Generar token JWT
+    const token = jwt.sign(
+      { userId: user.id, email: user.email, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+    
+    res.json({
+      success: true,
+      token,
+      isNewUser,
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        role: user.role,
+        avatar_url: user.avatar_url
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error en syncGoogleUser:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error interno del servidor' 
+    });
+  }
+};
+
+/**
+ * Obtener perfil del usuario autenticado
+ */
+const getProfile = async (req, res) => {
+  try {
+    const { data: account, error: accountError } = await supabase
+      .from('accounts')
+      .select('balance, currency')
+      .eq('user_id', req.user.id)
+      .single();
+    
+    if (accountError) {
+      return res.status(500).json({ 
+        success: false, 
+        error: 'Error al obtener cuenta bancaria' 
+      });
+    }
+    
+    res.json({
+      success: true,
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        full_name: req.user.full_name,
+        role: req.user.role,
+        avatar_url: req.user.avatar_url,
+        balance: account.balance,
+        currency: account.currency
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error en getProfile:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Error interno del servidor' 
+    });
+  }
+};
+
+module.exports = {
+  register,
+  login,
+  syncGoogleUser,
+  getProfile
 };

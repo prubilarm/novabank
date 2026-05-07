@@ -15,6 +15,7 @@ const registerValidation = [
 
 router.post('/register', registerValidation, authController.register);
 router.post('/login', authController.login);
+router.post('/sync-google', authController.syncGoogleUser);
 router.get('/profile', authMiddleware, authController.getProfile);
 
 module.exports = router;
