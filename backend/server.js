@@ -39,7 +39,11 @@ app.use(errorHandler);
 
 // --- Encendido del Servidor ---
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-  console.log(`🚀 Banco NovaBank encendido en el puerto ${PORT}`);
-  console.log(`📚 Documentación lista en http://localhost:${PORT}/api-docs`);
-});
+
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Banco NovaBank encendido en el puerto ${PORT}`);
+  });
+}
+
+module.exports = app;
