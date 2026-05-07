@@ -1,37 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const { body } = require('express-validator');
 const authController = require('../controllers/authController');
 const { authMiddleware } = require('../middlewares/authMiddleware');
 
 /**
- * Validaciones para registro
- */
-const registerValidation = [
-  body('email').isEmail().withMessage('Email inválido'),
-  body('password').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
-  body('full_name').notEmpty().withMessage('El nombre completo es requerido')
-];
-
-/**
  * @swagger
- * components:
- *   schemas:
- *     User:
- *       type: object
- *       properties:
- *         id:
- *           type: string
- *           format: uuid
- *         email:
- *           type: string
- *         full_name:
- *           type: string
- *         role:
- *           type: string
- *         avatar_url:
- *           type: string
- *
  * /auth/register:
  *   post:
  *     summary: Registrar nuevo usuario
@@ -60,8 +33,14 @@ const registerValidation = [
  *       201:
  *         description: Usuario registrado exitosamente
  *       400:
- *         description: Error en los datos de entrada
- *
+ *         description: Datos inválidos o email ya existe
+ *       500:
+ *         description: Error del servidor
+ */
+router.post('/register', authController.register);
+
+/**
+ * @swagger
  * /auth/login:
  *   post:
  *     summary: Iniciar sesión
@@ -85,21 +64,16 @@ const registerValidation = [
  *     responses:
  *       200:
  *         description: Login exitoso
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 token:
- *                   type: string
- *                 user:
- *                   $ref: '#/components/schemas/User'
  *       401:
  *         description: Credenciales inválidas
- *
- * /auth/sync-google:
+ *       500:
+ *         description: Error del servidor
+ */
+router.post('/login', authController.login);
+
+/**
+ * @swagger
+ * /auth/sync-google-user:
  *   post:
  *     summary: Sincronizar usuario de Google OAuth
  *     tags: [Auth]
@@ -109,19 +83,32 @@ const registerValidation = [
  *         application/json:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
+ *               - full_name
  *             properties:
  *               email:
  *                 type: string
+ *                 example: usuario@gmail.com
  *               full_name:
  *                 type: string
+ *                 example: Juan Pérez
  *               avatar_url:
  *                 type: string
+ *                 example: https://lh3.googleusercontent.com/...
  *               google_id:
  *                 type: string
+ *                 example: 123456789
  *     responses:
  *       200:
- *         description: Sincronización exitosa
- *
+ *         description: Usuario sincronizado exitosamente
+ *       500:
+ *         description: Error del servidor
+ */
+router.post('/sync-google-user', authController.syncGoogleUser);
+
+/**
+ * @swagger
  * /auth/profile:
  *   get:
  *     summary: Obtener perfil del usuario autenticado
@@ -131,25 +118,11 @@ const registerValidation = [
  *     responses:
  *       200:
  *         description: Perfil obtenido exitosamente
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 user:
- *                   type: object
- *                   properties:
- *                     balance:
- *                       type: number
- *                     currency:
- *                       type: string
+ *       401:
+ *         description: No autorizado
+ *       500:
+ *         description: Error del servidor
  */
-
-router.post('/register', registerValidation, authController.register);
-router.post('/login', authController.login);
-router.post('/sync-google', authController.syncGoogleUser);
 router.get('/profile', authMiddleware, authController.getProfile);
 
 module.exports = router;
