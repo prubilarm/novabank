@@ -1,34 +1,89 @@
-# 🏦 NovaBank - Sistema Bancario Premium
+# 🏦 NovaBank - Sistema Bancario Digital
 
-¡Bienvenido a NovaBank! Este es un sistema bancario completo, diseñado con una estética moderna (Glassmorphism) y una arquitectura robusta.
+NovaBank es una plataforma bancaria moderna, segura y escalable construida con las mejores tecnologías del ecosistema JavaScript.
 
-## 🚀 Guía de Inicio Rápido (Para No Programadores)
+## 🚀 Tecnologías
 
-Sigue estos pasos para poner en marcha tu banco:
+| Área | Tecnología |
+|------|------------|
+| Frontend | React.js + Tailwind CSS |
+| Backend | Node.js + Express.js (MVC) |
+| Móvil | React Native (Expo) |
+| Base de Datos | Supabase (PostgreSQL) |
+| Autenticación | JWT + Google OAuth |
+| Deployment | Vercel |
+| Documentación | Swagger/OpenAPI |
 
-### 1. Preparar el Servidor (Backend)
-1. Abre una terminal en la carpeta `backend`.
-2. Ejecuta el comando: `npm install` (solo la primera vez).
-3. Ejecuta el comando: `npm start`.
-4. Verás un mensaje: `🚀 NovaBank Server listo en http://localhost:5000`.
-5. **Documentación API**: Puedes ver y probar las funciones del banco en `http://localhost:5000/api-docs`.
+## ✨ Características
 
-### 2. Preparar la Aplicación (Frontend)
-1. Abre una nueva terminal en la carpeta `frontend`.
-2. Ejecuta el comando: `npm install` (solo la primera vez).
-3. Ejecuta el comando: `npm run dev`.
-4. Abre tu navegador en `http://localhost:3000`.
+- ✅ Dashboard financiero en tiempo real
+- ✅ Transferencias instantáneas entre usuarios
+- ✅ Historial completo de transacciones
+- ✅ Autenticación segura con JWT
+- ✅ Login con Google OAuth
+- ✅ Panel de administración
+- ✅ Email de bienvenida automático
+- ✅ Diseño responsive y moderno
+- ✅ App móvil nativa
+- ✅ Documentación API completa
 
-## 🛠️ Tecnologías Utilizadas
-- **Frontend**: React 18, Vite, Framer Motion (animaciones), Lucide React (iconos).
-- **Backend**: Node.js, Express, SQLite (Base de datos local), JWT (Seguridad).
-- **Documentación**: Swagger UI.
+## 📋 Prerrequisitos
 
-## 🎨 Características Premium
-- **Diseño Glassmorphism**: Interfaz translúcida y moderna.
-- **Seguridad Real**: Contraseñas encriptadas y tokens de acceso.
-- **Transacciones en Vivo**: Envía dinero a otras cuentas de NovaBank al instante.
-- **Modo Oscuro Nativo**: Diseñado para reducir la fatiga visual.
+- Node.js 18+ 
+- npm o yarn
+- Cuenta en Supabase (gratis)
+- Cuenta en Resend para emails (gratis)
+- Cuenta en Vercel para deploy (gratis)
+
+## 🛠️ Instalación Local
+
+### 1. Clonar el repositorio
+```bash
+git clone https://github.com/prubilarm/novabank.git
+cd novabank
+```
+
+### 2. Configurar el Backend
+```bash
+cd backend
+npm install
+# Crear archivo .env basado en .env.example y completar con tus credenciales
+npm run dev
+```
+
+### 3. Configurar el Frontend
+```bash
+cd ../frontend
+npm install
+# Crear archivo .env y configurar REACT_APP_API_URL=http://localhost:3001
+npm start
+```
+
+### 4. Configurar el Móvil
+```bash
+cd ../mobile
+npm install
+npx expo start
+```
+
+## 🔒 Variables de Entorno (.env)
+
+El sistema requiere las siguientes variables para funcionar correctamente:
+
+**Backend:**
+- `PORT`: Puerto del servidor (ej. 3001)
+- `SUPABASE_URL`: URL de tu proyecto Supabase
+- `SUPABASE_SERVICE_ROLE_KEY`: Key administrativa de Supabase
+- `JWT_SECRET`: Clave secreta para firmar los tokens
+- `RESEND_API_KEY`: Key para el envío de emails
+- `FRONTEND_URL`: URL del frontend para los links en los emails
+
+**Frontend:**
+- `REACT_APP_API_URL`: URL de la API del backend
+
+## 📚 Documentación de la API
+Una vez que el backend esté en ejecución, puedes acceder a la documentación interactiva en:
+`http://localhost:3001/api-docs`
 
 ---
-Generado por **Antigravity** - Arquitecto Senior Full-Stack.
+© 2024 NovaBank. Desarrollado con ❤️ para el futuro de las finanzas.
