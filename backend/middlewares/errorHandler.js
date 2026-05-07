@@ -1,14 +1,18 @@
 /**
- * Middleware global para manejo de errores
+ * Manejador global de errores
+ * Captura cualquier error no manejado en la aplicación
  */
 const errorHandler = (err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+  console.error('Error no manejado:', err);
   
-  console.error(`[Error] ${err.message}`);
+  // Determinar código de estado
+  const statusCode = err.statusCode || 500;
   
+  // Respuesta de error
   res.status(statusCode).json({
-    message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+    success: false,
+    error: err.message || 'Error interno del servidor',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });
 };
 
