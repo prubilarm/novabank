@@ -2,10 +2,16 @@ const User = require('../models/User');
 const Account = require('../models/Account');
 const supabase = require('../services/supabaseClient');
 const jwt = require('jsonwebtoken');
+const { validationResult } = require('express-validator');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'novabank_secret';
 
 exports.register = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   const { fullName, email, password } = req.body;
 
   try {
