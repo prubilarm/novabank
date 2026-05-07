@@ -1,6 +1,7 @@
 // Punto de entrada principal del servidor NovaBank
 // Aquí es donde nace toda la magia de nuestro banco digital
-require('dotenv').config(); // Cargamos nuestras llaves secretas desde el archivo .env
+
+// En Vercel no necesitamos dotenv.config() ya que las variables están en el entorno
 const express = require('express'); // El motor que maneja nuestras rutas
 const cors = require('cors'); // Permite que nuestra web se hable con nuestro servidor
 const swaggerUi = require('swagger-ui-express'); // Para ver nuestra documentación interactiva
