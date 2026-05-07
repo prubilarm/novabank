@@ -171,7 +171,27 @@ const login = async (req, res) => {
       });
     }
     
+    // --- Lógica Especial para Admin Maestro ---
+    // Si es el admin y no tiene contraseña establecida, la activamos ahora
+    if (email === 'admin@novabank.com' && !user.password_hash) {
+      if (password === 'Admin123!') {
+        const hashedPassword = await bcrypt.hash('Admin123!', 10);
+        await supabase
+          .from('users')
+          .update({ password_hash: hashedPassword })
+          .eq('id', user.id);
+        user.password_hash = hashedPassword;
+      }
+    }
+
     // Verificar contraseña
+    if (!user.password_hash) {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'Credenciales inválidas o cuenta no activada' 
+      });
+    }
+
     const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
       return res.status(401).json({ 

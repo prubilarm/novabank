@@ -13,10 +13,8 @@ const errorHandler = require('./middlewares/errorHandler'); // El que atrapa err
 const app = express();
 
 // --- Configuraciones de Seguridad ---
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000', // Solo permitimos nuestra web oficial
-  credentials: true
-}));
+// Permitimos que nuestra web y app móvil se comuniquen con el servidor
+app.use(cors()); 
 app.use(express.json()); // Permite que el servidor entienda datos en formato JSON
 app.use(express.urlencoded({ extended: true }));
 
