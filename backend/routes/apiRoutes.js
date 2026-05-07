@@ -8,8 +8,10 @@ const { authMiddleware } = require('../middlewares/authMiddleware');
 router.get('/user/profile', authMiddleware, userController.getProfile);
 router.put('/user/profile', authMiddleware, userController.updateProfile);
 
-// Transacciones
+// Transacciones y Saldo
+router.get('/balance', authMiddleware, transactionController.getBalance);
+router.post('/deposit', authMiddleware, transactionController.deposit);
 router.get('/transactions', authMiddleware, transactionController.getHistory);
-router.post('/transactions/transfer', authMiddleware, transactionController.transfer);
+router.post('/transfer', authMiddleware, transactionController.transfer);
 
 module.exports = router;
