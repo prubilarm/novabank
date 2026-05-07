@@ -3,27 +3,24 @@
   "builds": [
     {
       "src": "backend/server.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["backend/**"]
-      }
+      "use": "@vercel/node"
     },
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
-      "config": {
-        "distDir": "frontend/build"
-      }
+      "config": { "distDir": "build" }
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "backend/server.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "frontend/build/$1"
-    }
+    { "src": "/api/(.*)", "dest": "backend/server.js" },
+    { "src": "/auth/(.*)", "dest": "backend/server.js" },
+    { "src": "/admin/(.*)", "dest": "backend/server.js" },
+    { "src": "/api-docs/(.*)", "dest": "backend/server.js" },
+    { "src": "/static/(.*)", "dest": "frontend/static/$1" },
+    { "src": "/favicon.ico", "dest": "frontend/favicon.ico" },
+    { "src": "/manifest.json", "dest": "frontend/manifest.json" },
+    { "src": "/(.*)", "dest": "frontend/$1", "continue": true },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "frontend/index.html" }
   ]
 }
